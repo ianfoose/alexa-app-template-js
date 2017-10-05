@@ -1,130 +1,57 @@
-/**
- Copyright 2017 Ian Foose Foose Industries
-*/
 
-'use strict';
+// 1. Text strings =====================================================================================================
+//    Modify these strings and messages to change the behavior of your Lambda function
 
-// Route the incoming request based on type (LaunchRequest, IntentRequest,
-// etc.) The JSON body of the request is provided in the event parameter.
-exports.handler = function (event, context) {
-    try {
-        console.log("event.session.application.applicationId=" + event.session.application.applicationId);
-
-        //if (event.session.application.applicationId !== "amzn1.ask.skill.fb6bfc1b-f06c-431f-8a67-537810a3fd42") {
-          //  context.fail("Invalid Application ID");
-        //}
-
-        if (event.session.new) {
-            onSessionStarted({requestId: event.request.requestId}, event.session);
+const languageStrings = {
+    'en': {
+        'translation': {
+            'WELCOME' : "Welcome to Alexa Skill Template",
+            'HELP'    : "Say about info",
+            'ABOUT'   : "About info",
+            'STOP'    : "Okay, see you next time!"
         }
-
-        if (event.request.type === "LaunchRequest") {
-            onLaunch(event.request,
-                event.session,
-                function callback(sessionAttributes, speechletResponse) {
-                    context.succeed(buildResponse(sessionAttributes, speechletResponse));
-                });
-        } else if (event.request.type === "IntentRequest") {
-            onIntent(event.request,
-                event.session,
-                function callback(sessionAttributes, speechletResponse) {
-                    context.succeed(buildResponse(sessionAttributes, speechletResponse));
-                });
-        } else if (event.request.type === "SessionEndedRequest") {
-            onSessionEnded(event.request, event.session);
-            context.succeed();
-        }
-    } catch (e) {
-        context.fail("Exception: " + e);
     }
+    // , 'de-DE': { 'translation' : { 'TITLE'   : "Local Helfer etc." } }
 };
 
-/**
- * Called when the session starts.
- */
-function onSessionStarted(sessionStartedRequest, session) {
-    console.log("onSessionStarted requestId=" + sessionStartedRequest.requestId
-        + ", sessionId=" + session.sessionId);
+const SKILL_NAME = "SKILL_NAME";
 
-    // add any session init logic here
-}
+// 2. Skill Code =======================================================================================================
 
-/**
- * Called when the user invokes the skill without specifying what they want.
- */
-function onLaunch(launchRequest, session, callback) {
-    console.log("onLaunch requestId=" + launchRequest.requestId
-        + ", sessionId=" + session.sessionId);
+const Alexa = require('alexa-sdk');
 
-    var cardTitle = "Card Title" // set 
-    var output = "Launch Description" // set 
-    callback(session.attributes, buildSpeechletResponse(cardTitle, output, "", false));
-}
+exports.handler = function(event, context, callback) {
+    var alexa = Alexa.handler(event, context);
 
-/**
- * Called when the user specifies an intent for this skill.
- */
-function onIntent(intentRequest, session, callback) {
-    console.log("onIntent requestId=" + intentRequest.requestId
-        + ", sessionId=" + session.sessionId);
+    // alexa.appId = 'amzn1.echo-sdk-ams.app.1234';
+    alexa.resources = languageStrings;
+    alexa.registerHandlers(handlers);
+    alexa.execute();
+};
 
-    // TODO intents handling
-}
+const handlers = {
+    'LaunchRequest': function () {
+        var say = this.t('WELCOME') + ' ' + this.t('HELP');
+        this.response.speak(say).listen(say);
+        this.emit(':responseReady');
+    },
+    'AMAZON.NoIntent': function () {
+        this.emit('AMAZON.StopIntent');
+    },
+    'AMAZON.HelpIntent': function () {
+        this.response.speak(this.t('HELP')).listen(this.t('HELP'));
+        this.emit(':responseReady');
+    },
+    'AMAZON.CancelIntent': function () {
+        this.response.speak(this.t('STOP'));
+        this.emit(':responseReady');
+    },
+    'AMAZON.StopIntent': function () {
+        this.emit('SessionEndedRequest');
+    },
+    'SessionEndedRequest': function () {
+        this.response.speak(this.t('STOP'));
+        this.emit(':responseReady');
+    }
 
-/**
- * Called when the user ends the session.
- * Is not called when the skill returns shouldEndSession=true.
- */
-function onSessionEnded(sessionEndedRequest, session) {
-    console.log("onSessionEnded requestId=" + sessionEndedRequest.requestId
-        + ", sessionId=" + session.sessionId);
-
-    // Add any cleanup logic here
-}
-
-// ------- Helper functions to build responses -------
-
-function buildSpeechletResponse(title, output, repromptText, shouldEndSession) {
-    return {
-        outputSpeech: {
-            type: "PlainText",
-            text: output
-        },
-        card: {
-            type: "Simple",
-            title: title,
-            content: output
-        },
-        reprompt: {
-            outputSpeech: {
-                type: "PlainText",
-                text: repromptText
-            }
-        },
-        shouldEndSession: shouldEndSession
-    };
-}
-
-function buildSpeechletResponseWithoutCard(output, repromptText, shouldEndSession) {
-    return {
-        outputSpeech: {
-            type: "PlainText",
-            text: output
-        },
-        reprompt: {
-            outputSpeech: {
-                type: "PlainText",
-                text: repromptText
-            }
-        },
-        shouldEndSession: shouldEndSession
-    };
-}
-
-function buildResponse(sessionAttributes, speechletResponse) {
-    return {
-        version: "1.0",
-        sessionAttributes: sessionAttributes,
-        response: speechletResponse
-    };
-}
+};
