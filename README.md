@@ -18,16 +18,17 @@ Speech output is set on ```response.speak('text')```
 
 Reprompt text is set on ```.listen('try again')```
 
-Finally, it's sent back to the client when ```this.emit(':responseReady')``` is called.
-
 ```js
 this.response.speak(say).listen('try again');
-this.emit(':responseReady');
 ```
 
 ### Session
 
 The session can be accessed by calling ```this.event.session```
+
+To end a session, use ```this.emit(':tell');```
+
+To keep a session open, use ```this.emit(':ask');```
 
 ### Attributes
 
@@ -58,3 +59,5 @@ To get an attribute...
 ```js
 var val = this.attributes['someval'];
 ```
+
+More documentation found at https://www.npmjs.com/package/alexa-sdk
