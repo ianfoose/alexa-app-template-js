@@ -61,3 +61,5 @@ var val = this.attributes['someval'];
 ```
 
 More documentation found at https://www.npmjs.com/package/alexa-sdk
+
+and https://github.com/alexa/alexa-skills-kit-sdk-for-nodejs
